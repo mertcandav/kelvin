@@ -24,6 +24,7 @@ Please follow:
 - Your commit messages are explanatory
 - Your PR is not huge
 - Your changes are tested
+- Your changes follows design principles
 
 ## License
 The Kelvin is distributed under the terms of the BSD 3-Clause license. <br>
