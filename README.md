@@ -7,6 +7,13 @@ I want to see if a useful document oriented database can be written for Go using
 Therefore, this repository contains some experimentation. \
 If a good implementation comes out, I hope this repository will allow Go developers to have a tool like [TinyDB](https://github.com/msiemens/tinydb) or [LiteDB](https://github.com/mbdavid/LiteDB).
 
+## Design Principles
+- As efficient and performant as possible
+- Take care to keep type safety
+- Implement Kelvin as readable && elegant
+- Follow ACID principles
+- Provide thread-safety
+
 ## Contributing
 
 Even the smallest contribution is greatly appreciated. \
