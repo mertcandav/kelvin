@@ -5,6 +5,9 @@
 *.so
 *.dylib
 
+# Ignore pattern
+__*
+
 # Test binary, built with `go test -c`
 *.test
 
