@@ -13,6 +13,7 @@ If a good implementation comes out, I hope this repository will allow Go develop
 - Implement Kelvin as readable && elegant
 - Follow ACID principles
 - Provide thread-safety
+- No 3rd-party dependencies
 
 ## Contributing
 
