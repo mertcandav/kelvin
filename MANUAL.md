@@ -45,13 +45,13 @@ The strict mode stores all content in disk.
   - More efficient memory usage
 
 ## Write Buffer to Disk
-In in-memory mode, you have to write the memory to disk yourself. To do this, the ``Write`` function is used. \
-The ``Write`` function is available for only in-memory mode.
+In in-memory mode, you have to write the memory to disk yourself. To do this, the ``Commit`` function is used. \
+The ``Commit`` function is available for only in-memory mode.
 
 ```go
-err := k.Write()
+err := k.Commit()
 if err != nil {
-    // write is failed
+    // committing is failed
 }
 ```
 

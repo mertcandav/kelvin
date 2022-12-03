@@ -29,7 +29,7 @@ type kelvin[T any] struct {
 	cipher Cipher
 }
 
-func (k *kelvin[T]) write() error {
+func (k *kelvin[T]) commit() error {
 	f, err := os.Create(k.path)
 	if err != nil {
 		return err
@@ -46,9 +46,9 @@ func (k *kelvin[T]) write() error {
 	return nil
 }
 
-// Writes content to disk.
+// Commit writes content to disk.
 // Only useable for in-memory mode.
-func (k *kelvin[T]) Write() error {
+func (k *kelvin[T]) Commit() error {
 	if k.path == NoWrite {
 		return errors.New("no write mode enabled")
 	}
@@ -57,7 +57,7 @@ func (k *kelvin[T]) Write() error {
 		return errors.New("mode is not setted as in-memory")
 	}
 
-	return k.write()
+	return k.commit()
 }
 
 // buff reads disk content of Kelvin database into buffer.
@@ -78,4 +78,9 @@ func (k *kelvin[T]) buff() {
 	if err != nil {
 		panic("buffering failed: " + err.Error())
 	}
+}
+
+// Insert inserts items to database content.
+func (k *kelvin[T]) Insert(items ...T) {
+
 }
