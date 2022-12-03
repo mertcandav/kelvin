@@ -43,3 +43,15 @@ The strict mode stores all content in disk.
   - Stores data in disk
   - Reduced performance and access times due to read and write operations
   - More efficient memory usage
+
+## Write Buffer to Disk
+In in-memory mode, you have to write the memory to disk yourself. To do this, the ``Write`` function is used. \
+The ``Write`` function is available for only in-memory mode.
+
+```go
+err := k.Write()
+if err != nil {
+    // write is failed
+}
+```
+

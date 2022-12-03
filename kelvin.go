@@ -2,6 +2,7 @@ package kelvin
 
 import (
 	"encoding/json"
+	"errors"
 	"os"
 )
 
@@ -26,6 +27,37 @@ type kelvin[T any] struct {
 	path   string
 	buffer []T
 	cipher Cipher
+}
+
+func (k *kelvin[T]) write() error {
+	f, err := os.Create(k.path)
+	if err != nil {
+		return err
+	}
+	content := []byte(emptyContent)
+	_, err = f.Write(readyToWrite(content, k.cipher))
+	if err != nil {
+		return err
+	}
+	err = f.Close()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// Writes content to disk.
+// Only useable for in-memory mode.
+func (k *kelvin[T]) Write() error {
+	if k.path == NoWrite {
+		return errors.New("no write mode enabled")
+	}
+
+	if k.mode != InMemory {
+		return errors.New("mode is not setted as in-memory")
+	}
+
+	return k.write()
 }
 
 // buff reads disk content of Kelvin database into buffer.
