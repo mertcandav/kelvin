@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"os"
+	"sync"
 )
 
 // Kelvin mode.
@@ -19,7 +20,7 @@ const NoWrite = ""
 const Ext = ".klvn"
 
 // Empty Kelvin content.
-const emptyContent = "{}"
+const emptyContent = "[]"
 
 // kelvin is kelvin database structure.
 type kelvin[T any] struct {
@@ -27,18 +28,33 @@ type kelvin[T any] struct {
 	path   string
 	buffer []T
 	cipher Cipher
+	locker *sync.Mutex
 }
 
-func (k *kelvin[T]) commit() error {
+func (k *kelvin[T]) lock() { k.locker.Lock() }
+func (k *kelvin[T]) unlock() { k.locker.Unlock() }
+
+func (k *kelvin[T]) commit(buffer []T) error {
 	f, err := os.Create(k.path)
 	if err != nil {
 		return err
 	}
-	content := []byte(emptyContent)
+
+	var content []byte
+	if buffer == nil {
+		content = []byte(emptyContent)
+	} else {
+		content, err = json.Marshal(buffer)
+		if err != nil {
+			return err
+		}
+	}
+
 	_, err = f.Write(readyToWrite(content, k.cipher))
 	if err != nil {
 		return err
 	}
+
 	err = f.Close()
 	if err != nil {
 		return err
@@ -57,11 +73,12 @@ func (k *kelvin[T]) Commit() error {
 		return errors.New("mode is not setted as in-memory")
 	}
 
-	return k.commit()
+	k.lock()
+	defer k.unlock()
+	return k.commit(k.buffer)
 }
 
-// buff reads disk content of Kelvin database into buffer.
-func (k *kelvin[T]) buff() {
+func (k *kelvin[T]) decode() ([]T, error) {
 	info, err := os.Stat(k.path)
 	if err != nil {
 		panic("buffering failed: path is not exist: " + k.path)
@@ -73,14 +90,56 @@ func (k *kelvin[T]) buff() {
 	if err != nil {
 		panic("buffering failed: " + err.Error())
 	}
+	var buffer []T
 	bytes = readyToProcess(bytes, k.cipher)
-	err = json.Unmarshal(bytes, &k.buffer)
+	err = json.Unmarshal(bytes, &buffer)
 	if err != nil {
 		panic("buffering failed: " + err.Error())
 	}
+	return buffer, err
+}
+
+// buff reads disk content of Kelvin database into buffer.
+func (k *kelvin[T]) buff() {
+	buffer, err := k.decode()
+	if err == nil {
+		k.buffer = buffer
+	}
+}
+
+func (k *kelvin[T]) getBufferCopy() (_ []T, err error) {
+	k.lock()
+	defer k.unlock()
+	var kbuffer []T
+	if k.mode == InMemory {
+		kbuffer = k.buffer
+	} else {
+		kbuffer, err = k.decode()
+		if err != nil {
+			return nil, err
+		}
+	}
+	buffer := make([]T, len(kbuffer))
+	_ = copy(buffer, kbuffer)
+	return buffer, err
+}
+
+func (k *kelvin[T]) push(buffer []T) error {
+	k.lock()
+	defer k.unlock()
+	if k.mode == Strict {
+		return k.commit(buffer)
+	}
+	k.buffer = buffer
+	return nil
 }
 
 // Insert inserts items to database content.
-func (k *kelvin[T]) Insert(items ...T) {
-
+func (k *kelvin[T]) Insert(items ...T) error {
+	buffer, err := k.getBufferCopy()
+	if err != nil {
+		return err
+	}
+	buffer = append(buffer, items...)
+	return k.push(buffer)
 }

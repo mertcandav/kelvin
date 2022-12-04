@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"sync"
 )
 
 func readyToWrite(bytes []byte, cipher Cipher) []byte {
@@ -22,16 +23,7 @@ func readyToProcess(bytes []byte, cipher Cipher) []byte {
 	return bytes
 }
 
-// OpenSafe returns new instance of Kelvin by data type.
-// Returns error if any errors occur.
-// Creates new Kelvin database if not exist in given path.
-// Uses given cipher for encryption.
-//
-// Panics if;
-//  - T is not structure
-//  - decoding is failed
-//  - buffering is failed
-func OpenSafe[T any](path string, mode int, cipher Cipher) (k *kelvin[T], _ error) {
+func open[T any](path string, mode int, cipher Cipher) (k *kelvin[T], _ error) {
 	var t T
 	kind := reflect.TypeOf(t).Kind()
 	if kind != reflect.Struct {
@@ -74,7 +66,7 @@ func OpenSafe[T any](path string, mode int, cipher Cipher) (k *kelvin[T], _ erro
 			}
 
 			if mode == InMemory {
-				defer k.buff()
+				defer func () { k.buff() }()
 			}
 		}
 	}
@@ -84,10 +76,24 @@ func OpenSafe[T any](path string, mode int, cipher Cipher) (k *kelvin[T], _ erro
 	k.buffer = buffer
 	k.mode = byte(mode)
 	k.cipher = cipher
+	k.locker = new(sync.Mutex)
 	return k, nil
+}
+
+// OpenSafe returns new instance of Kelvin by data type.
+// Returns error if any errors occur.
+// Creates new Kelvin database if not exist in given path.
+// Uses given cipher for encryption.
+//
+// Panics if;
+//  - T is not structure
+//  - decoding is failed
+//  - buffering is failed
+func OpenSafe[T any](path string, mode int, cipher Cipher) (*kelvin[T], error) {
+	return open[T](path, mode, cipher)
 }
 
 // Open same as OpenSafe, but not uses cipher.
 func Open[T any](path string, mode int) (*kelvin[T], error) {
-	return OpenSafe[T](path, mode, nil)
+	return open[T](path, mode, nil)
 }
