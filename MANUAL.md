@@ -17,13 +17,13 @@ The ``Open`` or ``OpenSafe`` functions are used to create or use an existing Kel
 The ``OpenSafe`` function is recommended if you want to encrypt the database.
 
 ```go
-k := kelvin.Open[Car]("cars.klvn", kelvin.InMemory)
+k := kelvin.Open[Employee]("employees.klvn", kelvin.InMemory)
 ```
 
 In the example above, you connect to an unencrypted Kelvin database.
 If it is encrypted you will get an error.
 If there is no database in the specified file path, it will be created.
-Datas are `Car` structure.
+Datas are `Employee` structure.
 
 There are two modes, the example above uses in-memory mode.
 
@@ -70,11 +70,32 @@ Returns immutable copy of collection, but not deep copy.
 coll := k.GetCollection()
 ```
 
+## Map Function
+
+Map iterates into all collection and commits changes. \
+Does not nothing if handler is empty.
+
+This method can be useful if you want to manipulate data based on a certain condition.
+
+```go
+k.Map(func(e *Employee) {
+    switch e.Title {
+    case "Software Engineer":
+        e.Salary = (e.Salary*120) / 100
+    case "Computer Scientist":
+        e.Salary = (e.Salary*130) / 100
+    case "Data Scientist":
+        e.Salary = (e.Salary*125) / 100
+    }
+})
+```
+The example above gives an increase in the salaries of the employees according to their job titles.
+
 ## Insert Data
 The ``Insert`` function is used to insert data.
 
 ```go
 k.Insert(
-    Car{Brand: "Ferrari", Model: "330 P4"},
-    Car{Brand: "Ford", Model: "GT40"})
+    Car{Name: "James SMITH", Title: "Software Engineer", Salary: 12500},
+    Car{Name: "Linda JONES", Title: "Data Engineer", Salary: 10750})
 ```

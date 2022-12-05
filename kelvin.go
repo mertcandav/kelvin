@@ -150,3 +150,21 @@ func (k *kelvin[T]) Insert(items ...T) {
 // GetCollection returns all collection.
 // Not returns deep copy of collection.
 func (k *kelvin[T]) GetCollection() []T { return k.getImmutableCollection() }
+
+// Map iterates into all collection and commits changes.
+// Does not nothing if handler is empty.
+func (k *kelvin[T]) Map(handler func(t *T)) {
+	if handler == nil {
+		return
+	}
+
+	buffer := k.getImmutableCollection()
+	i := 0
+	for i < len(buffer) {
+		element := &buffer[i]
+		handler(element)
+		i++
+	}
+
+	k.push(buffer)
+}
