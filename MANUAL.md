@@ -67,6 +67,17 @@ if err != nil {
 }
 ```
 
+## Get Collection
+
+The ``GetCollection`` function is used to get all data of database.
+
+```go
+coll, err := k.GetCollection()
+if err != nil {
+    // reading is failed
+}
+```
+
 ## Insert Data
 The ``Insert`` function is used to insert data.
 

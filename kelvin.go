@@ -110,15 +110,26 @@ func (k *kelvin[T]) buff() {
 	}
 }
 
-func (k *kelvin[T]) getBufferCopy() (_ []T, err error) {
+func (k *kelvin[T]) getCollection() ([]T, error) {
 	k.lock()
 	defer k.unlock()
 	if k.mode == Strict {
 		return k.decode()
 	}
-	buffer := make([]T, len(k.buffer))
-	_ = copy(buffer, k.buffer)
-	return buffer, err
+	return k.buffer, nil
+}
+
+func (k *kelvin[T]) getBufferCopy() (_ []T, err error) {
+	buffer, err := k.getCollection()
+	if err != nil {
+		return nil, err
+	}
+	if k.mode == Strict {
+		return buffer, nil
+	}
+	cbuffer := make([]T, len(buffer))
+	_ = copy(cbuffer, buffer)
+	return cbuffer, nil
 }
 
 func (k *kelvin[T]) push(buffer []T) error {
@@ -143,3 +154,6 @@ func (k *kelvin[T]) Insert(items ...T) error {
 	buffer = append(buffer, items...)
 	return k.push(buffer)
 }
+
+// GetCollection returns all collection.
+func (k *kelvin[T]) GetCollection() ([]T, error) { return k.getCollection() }
