@@ -113,17 +113,11 @@ func (k *kelvin[T]) buff() {
 func (k *kelvin[T]) getBufferCopy() (_ []T, err error) {
 	k.lock()
 	defer k.unlock()
-	var kbuffer []T
-	if k.mode == InMemory {
-		kbuffer = k.buffer
-	} else {
-		kbuffer, err = k.decode()
-		if err != nil {
-			return nil, err
-		}
+	if k.mode == Strict {
+		return k.decode()
 	}
-	buffer := make([]T, len(kbuffer))
-	_ = copy(buffer, kbuffer)
+	buffer := make([]T, len(k.buffer))
+	_ = copy(buffer, k.buffer)
 	return buffer, err
 }
 
