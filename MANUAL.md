@@ -63,7 +63,8 @@ k.Commit()
 
 ## Get Collection
 
-The ``GetCollection`` function is used to get all data of database.
+The ``GetCollection`` function is used to get all data of database. \
+Returns immutable copy of collection, but not deep copy.
 
 ```go
 coll := k.GetCollection()

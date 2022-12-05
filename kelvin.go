@@ -118,7 +118,7 @@ func (k *kelvin[T]) getCollection() []T {
 	return k.buffer
 }
 
-func (k *kelvin[T]) getBufferCopy() []T {
+func (k *kelvin[T]) getImmutableCollection() []T {
 	buffer := k.getCollection()
 	if k.mode == Strict {
 		return buffer
@@ -142,10 +142,11 @@ func (k *kelvin[T]) push(buffer []T) {
 
 // Insert inserts items to database content.
 func (k *kelvin[T]) Insert(items ...T) {
-	buffer := k.getBufferCopy()
+	buffer := k.getImmutableCollection()
 	buffer = append(buffer, items...)
 	k.push(buffer)
 }
 
 // GetCollection returns all collection.
-func (k *kelvin[T]) GetCollection() []T { return k.getCollection() }
+// Not returns deep copy of collection.
+func (k *kelvin[T]) GetCollection() []T { return k.getImmutableCollection() }
