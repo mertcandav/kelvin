@@ -47,6 +47,15 @@ The strict mode stores all content in disk.
   - More efficient memory usage
   - Data is written to disk every time
 
+## Check Database is NoWrite Mode
+
+```go
+nw := k.IsNoWrite()
+if nw {
+    // NoWrite mode
+}
+```
+
 ## Write Buffer to Disk
 In in-memory mode, you have to write the memory to disk yourself. To do this, the ``Commit`` function is used. \
 The ``Commit`` function is available for only in-memory mode.

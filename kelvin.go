@@ -65,7 +65,7 @@ func (k *kelvin[T]) commit(buffer []T) error {
 // Commit writes content to disk.
 // Only useable for in-memory mode.
 func (k *kelvin[T]) Commit() error {
-	if k.path == NoWrite {
+	if k.IsNoWrite() {
 		return errors.New("no write mode enabled")
 	}
 
@@ -77,6 +77,9 @@ func (k *kelvin[T]) Commit() error {
 	defer k.unlock()
 	return k.commit(k.buffer)
 }
+
+// IsNoWrite reports Kelvin instance is NoWrite mode.
+func (k *kelvin[T]) IsNoWrite() bool { return k.path == NoWrite }
 
 func (k *kelvin[T]) decode() ([]T, error) {
 	info, err := os.Stat(k.path)
@@ -128,9 +131,12 @@ func (k *kelvin[T]) push(buffer []T) error {
 	k.lock()
 	defer k.unlock()
 	if k.mode == Strict {
-		return k.commit(buffer)
+		if !k.IsNoWrite() {
+			return k.commit(buffer)
+		}
+	} else {
+		k.buffer = buffer
 	}
-	k.buffer = buffer
 	return nil
 }
 
