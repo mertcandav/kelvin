@@ -17,7 +17,7 @@ The ``Open`` or ``OpenSafe`` functions are used to create or use an existing Kel
 The ``OpenSafe`` function is recommended if you want to encrypt the database.
 
 ```go
-k := kelvin.Open[Employee]("employees.klvn", kelvin.InMemory)
+db := kelvin.Open[Employee]("employees.klvn", kelvin.InMemory)
 ```
 
 In the example above, you connect to an unencrypted Kelvin database.
@@ -47,7 +47,7 @@ The strict mode stores all content in disk.
 ## Check Database is NoWrite Mode
 
 ```go
-nw := k.IsNoWrite()
+nw := db.IsNoWrite()
 if nw {
     // NoWrite mode
 }
@@ -58,7 +58,7 @@ In in-memory mode, you have to write the memory to disk yourself. To do this, th
 The ``Commit`` function is available for only in-memory mode.
 
 ```go
-k.Commit()
+db.Commit()
 ```
 
 ## Get Collection
@@ -67,18 +67,21 @@ The ``GetCollection`` function is used to get all data of database. \
 Returns immutable copy of collection, but not deep copy.
 
 ```go
-coll := k.GetCollection()
+coll := db.GetCollection()
 ```
 
 ## Map Function
 
 Map iterates into all collection and commits changes. \
-Does not nothing if handler is empty.
+Does not nothing if handler is nil.
 
 This method can be useful if you want to manipulate data based on a certain condition.
 
+> Collection copies are not deep immutable copy. \
+> So if you make changes any mutable field of T, you can change original collection.
+
 ```go
-k.Map(func(e *Employee) {
+db.Map(func(e *Employee) {
     switch e.Title {
     case "Software Engineer":
         e.Salary = (e.Salary*120) / 100
@@ -89,13 +92,29 @@ k.Map(func(e *Employee) {
     }
 })
 ```
+
 The example above gives an increase in the salaries of the employees according to their job titles.
 
 ## Insert Data
+
 The ``Insert`` function is used to insert data.
 
 ```go
-k.Insert(
+db.Insert(
     Car{Name: "James SMITH", Title: "Software Engineer", Salary: 12500},
     Car{Name: "Linda JONES", Title: "Data Engineer", Salary: 10750})
 ```
+
+## Filter Data
+
+The ``Where`` function is used to get collection with filter. \
+Returns nil if handler is nil.
+
+> Collection copies are not deep immutable copy. \
+> So if you make changes any mutable field of T, you can change original collection.
+
+```go
+employees := db.Where(func(e Employee) bool { return e.Salary > 8000 })
+```
+
+The example above returns a collection that contains only employees with a salary higher than 4000.

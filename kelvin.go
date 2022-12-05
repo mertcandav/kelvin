@@ -153,6 +153,9 @@ func (k *kelvin[T]) GetCollection() []T { return k.getImmutableCollection() }
 
 // Map iterates into all collection and commits changes.
 // Does not nothing if handler is empty.
+//
+// Collection copies are not deep immutable copy.
+// So if you make changes any mutable field of T, you can change original collection.
 func (k *kelvin[T]) Map(handler func(t *T)) {
 	if handler == nil {
 		return
@@ -167,4 +170,28 @@ func (k *kelvin[T]) Map(handler func(t *T)) {
 	}
 
 	k.push(buffer)
+}
+
+// Where returns a collection containing only data for which the handler returns true.
+// Returns nil if handler is nil.
+//
+// Collection copies are not deep immutable copy.
+// So if you make changes any mutable field of T, you can change original collection.
+func (k *kelvin[T]) Where(handler func(t T) bool) []T {
+	if handler == nil {
+		return nil
+	}
+
+	buffer := k.getCollection()
+	result := make([]T, 0, len(buffer)/2)
+	i := 0
+	for i < len(buffer) {
+		element := buffer[i]
+		if handler(element) {
+			result = append(result, element)
+		}
+		i++
+	}
+
+	return result
 }
