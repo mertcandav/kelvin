@@ -73,6 +73,8 @@ func open[T any](path string, mode int, cipher Cipher) (k *kelvin[T]) {
 				}
 			}()
 		}
+	} else if mode == Strict {
+		panic("database connection failed: no-write mode is cannot combined with strict mode")
 	}
 
 	k = new(kelvin[T])
