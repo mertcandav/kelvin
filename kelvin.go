@@ -25,7 +25,7 @@ const emptyContent = "[]"
 // kelvin is kelvin database structure.
 type kelvin[T any] struct {
 	mode   byte
-	path   string
+	stream *os.File
 	buffer []T
 	cipher Cipher
 	locker *sync.Mutex
@@ -34,62 +34,66 @@ type kelvin[T any] struct {
 func (k *kelvin[T]) lock() { k.locker.Lock() }
 func (k *kelvin[T]) unlock() { k.locker.Unlock() }
 
-func (k *kelvin[T]) commit(buffer []T) error {
-	f, err := os.Create(k.path)
-	if err != nil {
-		return err
-	}
-
+func (k *kelvin[T]) commit(buffer []T) {
 	var content []byte
+	var err error
 	if buffer == nil {
 		content = []byte(emptyContent)
 	} else {
 		content, err = json.Marshal(buffer)
 		if err != nil {
-			return err
+			panic("comitting failed: " + err.Error())
 		}
 	}
-
-	_, err = f.Write(readyToWrite(content, k.cipher))
+	content = readyToWrite(content, k.cipher)
+	const TRUNC = 0
+	err = k.stream.Truncate(TRUNC)
 	if err != nil {
-		return err
+		panic("comitting failed: " + err.Error())
 	}
-
-	err = f.Close()
+	_, err = k.stream.Seek(TRUNC, TRUNC)
 	if err != nil {
-		return err
+		panic("comitting failed: " + err.Error())
 	}
-	return nil
+	_, err = k.stream.WriteAt(content, TRUNC)
+	if err != nil {
+		panic("comitting failed: " + err.Error())
+	}
+	err = k.stream.Sync()
+	if err != nil {
+		panic("comitting failed: " + err.Error())
+	}
 }
 
 // Commit writes content to disk.
 // Only useable for in-memory mode.
 func (k *kelvin[T]) Commit() error {
 	if k.IsNoWrite() {
-		return errors.New("no write mode enabled")
+		return errors.New("comitting failed: no-write mode enabled")
 	}
 
 	if k.mode != InMemory {
-		return errors.New("mode is not setted as in-memory")
+		return errors.New("comitting failed: mode is not setted as in-memory")
 	}
 
 	k.lock()
-	defer k.unlock()
-	return k.commit(k.buffer)
+	k.commit(k.buffer)
+	k.unlock()
+	return nil
 }
 
 // IsNoWrite reports Kelvin instance is NoWrite mode.
-func (k *kelvin[T]) IsNoWrite() bool { return k.path == NoWrite }
+func (k *kelvin[T]) IsNoWrite() bool { return k.stream == nil }
 
-func (k *kelvin[T]) decode() ([]T, error) {
-	info, err := os.Stat(k.path)
+func (k *kelvin[T]) decode() []T {
+	const TRUNC = 0
+	const EOF   = 2
+	n, err := k.stream.Seek(TRUNC, EOF)
 	if err != nil {
-		panic("buffering failed: path is not exist: " + k.path)
+		panic("buffering failed: " + err.Error())
 	}
-	if info.IsDir() {
-		panic("buffering failed: path is direcotry: " + k.path)
-	}
-	bytes, err := os.ReadFile(k.path)
+	bytes := make([]byte, n)
+	_, err = k.stream.ReadAt(bytes, TRUNC)
 	if err != nil {
 		panic("buffering failed: " + err.Error())
 	}
@@ -99,61 +103,49 @@ func (k *kelvin[T]) decode() ([]T, error) {
 	if err != nil {
 		panic("buffering failed: " + err.Error())
 	}
-	return buffer, err
+	return buffer
 }
 
 // buff reads disk content of Kelvin database into buffer.
-func (k *kelvin[T]) buff() {
-	buffer, err := k.decode()
-	if err == nil {
-		k.buffer = buffer
-	}
-}
+func (k *kelvin[T]) buff() { k.buffer = k.decode() }
 
-func (k *kelvin[T]) getCollection() ([]T, error) {
+func (k *kelvin[T]) getCollection() []T {
 	k.lock()
 	defer k.unlock()
 	if k.mode == Strict {
 		return k.decode()
 	}
-	return k.buffer, nil
+	return k.buffer
 }
 
-func (k *kelvin[T]) getBufferCopy() (_ []T, err error) {
-	buffer, err := k.getCollection()
-	if err != nil {
-		return nil, err
-	}
+func (k *kelvin[T]) getBufferCopy() []T {
+	buffer := k.getCollection()
 	if k.mode == Strict {
-		return buffer, nil
+		return buffer
 	}
 	cbuffer := make([]T, len(buffer))
 	_ = copy(cbuffer, buffer)
-	return cbuffer, nil
+	return cbuffer
 }
 
-func (k *kelvin[T]) push(buffer []T) error {
+func (k *kelvin[T]) push(buffer []T) {
 	k.lock()
 	defer k.unlock()
 	if k.mode == Strict {
 		if !k.IsNoWrite() {
-			return k.commit(buffer)
+			k.commit(buffer)
 		}
 	} else {
 		k.buffer = buffer
 	}
-	return nil
 }
 
 // Insert inserts items to database content.
-func (k *kelvin[T]) Insert(items ...T) error {
-	buffer, err := k.getBufferCopy()
-	if err != nil {
-		return err
-	}
+func (k *kelvin[T]) Insert(items ...T) {
+	buffer := k.getBufferCopy()
 	buffer = append(buffer, items...)
-	return k.push(buffer)
+	k.push(buffer)
 }
 
 // GetCollection returns all collection.
-func (k *kelvin[T]) GetCollection() ([]T, error) { return k.getCollection() }
+func (k *kelvin[T]) GetCollection() []T { return k.getCollection() }

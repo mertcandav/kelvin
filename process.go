@@ -2,7 +2,6 @@ package kelvin
 
 import (
 	"errors"
-	"fmt"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -23,7 +22,7 @@ func readyToProcess(bytes []byte, cipher Cipher) []byte {
 	return bytes
 }
 
-func open[T any](path string, mode int, cipher Cipher) (k *kelvin[T], _ error) {
+func open[T any](path string, mode int, cipher Cipher) (k *kelvin[T]) {
 	var t T
 	kind := reflect.TypeOf(t).Kind()
 	if kind != reflect.Struct {
@@ -31,53 +30,56 @@ func open[T any](path string, mode int, cipher Cipher) (k *kelvin[T], _ error) {
 	}
 
 	if mode != InMemory && mode != Strict {
-		return nil, fmt.Errorf("'%d' is invalid kelvin mode", mode)
+		panic("database connection failed: invalid kelvin mode")
 	}
 
-	var buffer []T
 	if path != NoWrite {
 		if filepath.Ext(path) != Ext {
-			return nil, fmt.Errorf(`"%s" path is not a kelvin database file`, path)
+			panic("database connection failed: path is not a kelvin database file")
 		}
 
 		info, err := os.Stat(path)
 		if err != nil {
 			// Create new Kelvin database because not exist.
-
 			if !errors.Is(err, os.ErrNotExist) {
-				return nil, err
+				panic("database creation failed: " + err.Error())
 			}
+
 			f, err := os.Create(path)
 			if err != nil {
-				return nil, err
+				panic("database creation failed: " + err.Error())
 			}
 			content := []byte(emptyContent)
 			_, err = f.Write(readyToWrite(content, cipher))
 			if err != nil {
-				return nil, err
+				panic("database creation failed: " + err.Error())
 			}
-			err = f.Close()
-			if err != nil {
-				return nil, err
-			}
+			defer func() { k.stream = f }()
 		} else {
 			if info.IsDir() {
-				return nil, fmt.Errorf(`"%s" path is directory`, path)
+				panic("database connection failed: path is directory")
 			}
 
-			if mode == InMemory {
-				defer func () { k.buff() }()
+			const PERM = 0666
+			f, err := os.OpenFile(path, os.O_RDWR, PERM)
+			if err != nil {
+				panic("database connection failed: " + err.Error())
 			}
+
+			defer func() {
+				k.stream = f
+				if mode == InMemory {
+					k.buff()
+				}
+			}()
 		}
 	}
 
 	k = new(kelvin[T])
-	k.path = path
-	k.buffer = buffer
 	k.mode = byte(mode)
 	k.cipher = cipher
 	k.locker = new(sync.Mutex)
-	return k, nil
+	return k
 }
 
 // OpenSafe returns new instance of Kelvin by data type.
@@ -89,11 +91,11 @@ func open[T any](path string, mode int, cipher Cipher) (k *kelvin[T], _ error) {
 //  - T is not structure
 //  - decoding is failed
 //  - buffering is failed
-func OpenSafe[T any](path string, mode int, cipher Cipher) (*kelvin[T], error) {
+func OpenSafe[T any](path string, mode int, cipher Cipher) *kelvin[T] {
 	return open[T](path, mode, cipher)
 }
 
 // Open same as OpenSafe, but not uses cipher.
-func Open[T any](path string, mode int) (*kelvin[T], error) {
+func Open[T any](path string, mode int) *kelvin[T] {
 	return open[T](path, mode, nil)
 }

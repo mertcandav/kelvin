@@ -5,7 +5,7 @@ import "testing"
 type test_structure struct {}
 
 func TestOpen(t *testing.T) {
-	_, _ = Open[test_structure](NoWrite, InMemory)
+	_ = Open[test_structure](NoWrite, InMemory)
 
 	defer func() {
 		err := recover()
@@ -14,11 +14,11 @@ func TestOpen(t *testing.T) {
 		}
 	}()
 
-	_, _ = Open[int](NoWrite, InMemory)
+	_ = Open[int](NoWrite, InMemory)
 }
 
 func TestOpenSafe(t *testing.T) {
-	_, _ = OpenSafe[test_structure](NoWrite, InMemory, nil)
+	_ = OpenSafe[test_structure](NoWrite, InMemory, nil)
 
 	defer func() {
 		err := recover()
@@ -27,5 +27,5 @@ func TestOpenSafe(t *testing.T) {
 		}
 	}()
 
-	_, _ = OpenSafe[int](NoWrite, InMemory, nil)
+	_ = OpenSafe[int](NoWrite, InMemory, nil)
 }

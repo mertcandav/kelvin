@@ -17,10 +17,7 @@ The ``Open`` or ``OpenSafe`` functions are used to create or use an existing Kel
 The ``OpenSafe`` function is recommended if you want to encrypt the database.
 
 ```go
-k, err := kelvin.Open[Car]("cars.klvn", kelvin.InMemory)
-if err != nil {
-    // error occurs
-}
+k := kelvin.Open[Car]("cars.klvn", kelvin.InMemory)
 ```
 
 In the example above, you connect to an unencrypted Kelvin database.
@@ -61,10 +58,7 @@ In in-memory mode, you have to write the memory to disk yourself. To do this, th
 The ``Commit`` function is available for only in-memory mode.
 
 ```go
-err := k.Commit()
-if err != nil {
-    // committing is failed
-}
+k.Commit()
 ```
 
 ## Get Collection
@@ -72,17 +66,14 @@ if err != nil {
 The ``GetCollection`` function is used to get all data of database.
 
 ```go
-coll, err := k.GetCollection()
-if err != nil {
-    // reading is failed
-}
+coll := k.GetCollection()
 ```
 
 ## Insert Data
 The ``Insert`` function is used to insert data.
 
 ```go
-err := k.Insert(
+k.Insert(
     Car{Brand: "Ferrari", Model: "330 P4"},
     Car{Brand: "Ford", Model: "GT40"})
 ```
