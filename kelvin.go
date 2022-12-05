@@ -79,6 +79,7 @@ func (k *kelvin[T]) Commit() error {
 	k.lock()
 	k.commit(k.buffer)
 	k.unlock()
+
 	return nil
 }
 
@@ -109,15 +110,15 @@ func (k *kelvin[T]) decode() []T {
 // buff reads disk content of Kelvin database into buffer.
 func (k *kelvin[T]) buff() { k.buffer = k.decode() }
 
+// Lock needed.
 func (k *kelvin[T]) getCollection() []T {
-	k.lock()
-	defer k.unlock()
 	if k.mode == Strict {
 		return k.decode()
 	}
 	return k.buffer
 }
 
+// Lock needed.
 func (k *kelvin[T]) getImmutableCollection() []T {
 	buffer := k.getCollection()
 	if k.mode == Strict {
@@ -128,9 +129,8 @@ func (k *kelvin[T]) getImmutableCollection() []T {
 	return cbuffer
 }
 
+// Lock needed.
 func (k *kelvin[T]) push(buffer []T) {
-	k.lock()
-	defer k.unlock()
 	if k.mode == Strict {
 		if !k.IsNoWrite() {
 			k.commit(buffer)
@@ -142,6 +142,9 @@ func (k *kelvin[T]) push(buffer []T) {
 
 // Insert inserts items to database content.
 func (k *kelvin[T]) Insert(items ...T) {
+	k.lock()
+	defer k.unlock()
+
 	buffer := k.getImmutableCollection()
 	buffer = append(buffer, items...)
 	k.push(buffer)
@@ -149,7 +152,12 @@ func (k *kelvin[T]) Insert(items ...T) {
 
 // GetCollection returns all collection.
 // Not returns deep copy of collection.
-func (k *kelvin[T]) GetCollection() []T { return k.getImmutableCollection() }
+func (k *kelvin[T]) GetCollection() []T {
+	k.lock()
+	defer k.unlock()
+
+	return k.getImmutableCollection()
+}
 
 // Map iterates into all collection and commits changes.
 // Does not nothing if handler is empty.
@@ -161,7 +169,15 @@ func (k *kelvin[T]) Map(handler func(t *T)) {
 		return
 	}
 
+	k.lock()
+	defer k.unlock()
+
 	buffer := k.getImmutableCollection()
+
+	if len(buffer) == 0 {
+		return
+	}
+
 	i := 0
 	for i < len(buffer) {
 		element := &buffer[i]
@@ -182,7 +198,10 @@ func (k *kelvin[T]) Where(handler func(t T) bool) []T {
 		return nil
 	}
 
+	k.lock()
 	buffer := k.getCollection()
+	k.unlock()
+
 	result := make([]T, 0, len(buffer)/2)
 	i := 0
 	for i < len(buffer) {
