@@ -93,11 +93,16 @@ func open[T any](path string, mode int, cipher Cipher) (k *kelvin[T]) {
 //  - T is not structure
 //  - decoding is failed
 //  - buffering is failed
-func OpenSafe[T any](path string, mode int, cipher Cipher) *kelvin[T] {
+func OpenSafe[T any](path string, mode int, cipher Cipher) Kelvin[T] {
 	return open[T](path, mode, cipher)
 }
 
 // Open same as OpenSafe, but not uses cipher.
-func Open[T any](path string, mode int) *kelvin[T] {
+func Open[T any](path string, mode int) Kelvin[T] {
 	return open[T](path, mode, nil)
+}
+
+// OpenNW same as Open, but opens with NoWrite and InMemory.
+func OpenNW[T any]() Kelvin[T] {
+	return open[T](NoWrite, InMemory, nil)
 }

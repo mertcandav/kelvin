@@ -13,11 +13,16 @@ import "github.com/mertcandav/kelvin"
 ```
 
 A Kelvin database is always uses ``.klvn`` extension. \
-The ``Open`` or ``OpenSafe`` functions are used to create or use an existing Kelvin database. \
-The ``OpenSafe`` function is recommended if you want to encrypt the database.
+The ``Open``, ``OpenSafe`` or ``OpenNW`` functions are used to create or use an existing Kelvin database. \
+The ``OpenSafe`` function is recommended if you want to encrypt the database. \
+The ``OpenNW`` function is shortcut for no-write and in-memory mode.
 
 ```go
 db := kelvin.Open[Employee]("employees.klvn", kelvin.InMemory)
+```
+
+```go
+db := kelvin.OpenNW[Employee]()
 ```
 
 In the example above, you connect to an unencrypted Kelvin database.
@@ -126,7 +131,7 @@ Use the ``Kelvin`` interface for static typing.
 
 ```go
 var db kelvin.Kelvin[Employee]
-db = kelvin.Open[Employee](kelvin.NoWrite, kelvin.InMemory)
+db = kelvin.OpenNW[Employee]()
 ```
 
 ## How Kelvin Handling Data Safety?
