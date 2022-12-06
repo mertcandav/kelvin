@@ -1,6 +1,8 @@
 # Kelvin
 Kelvin is document oriented database written in pure Go.
 
+[Read Kelvin Manual](MANUAL.md)
+
 ## Motivation && Reasons
 Go has generic support with current versions. \
 I want to see if a useful document oriented database can be written for Go using generic types. \
