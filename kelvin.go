@@ -29,7 +29,7 @@ type Kelvin[T any] interface {
 	Insert(...T)
 	GetCollection() []T
 	Map(func(*T))
-	Where(func(T) bool) []T
+	Where(func(*T) bool) []T
 }
 
 // kelvin is kelvin database structure.
@@ -134,8 +134,11 @@ func (k *kelvin[T]) getImmutableCollection() []T {
 	if k.mode == Strict {
 		return buffer
 	}
-	cbuffer := make([]T, len(buffer))
-	_ = copy(cbuffer, buffer)
+	n := len(buffer)
+	cbuffer := make([]T, n)
+	for i := 0; i < n; i++ {
+		cbuffer[i] = deepCopy(buffer[i])
+	}
 	return cbuffer
 }
 
@@ -155,7 +158,7 @@ func (k *kelvin[T]) Insert(items ...T) {
 	k.lock()
 	defer k.unlock()
 
-	buffer := k.getImmutableCollection()
+	buffer := k.getCollection()
 	buffer = append(buffer, items...)
 	k.push(buffer)
 }
@@ -165,15 +168,11 @@ func (k *kelvin[T]) Insert(items ...T) {
 func (k *kelvin[T]) GetCollection() []T {
 	k.lock()
 	defer k.unlock()
-
 	return k.getImmutableCollection()
 }
 
 // Map iterates into all collection and commits changes.
 // Does not nothing if handler is empty.
-//
-// Collection copies are not deep immutable copy.
-// So if you make changes any mutable field of T, you can change original collection.
 func (k *kelvin[T]) Map(handler func(t *T)) {
 	if handler == nil {
 		return
@@ -182,17 +181,14 @@ func (k *kelvin[T]) Map(handler func(t *T)) {
 	k.lock()
 	defer k.unlock()
 
-	buffer := k.getImmutableCollection()
-
+	buffer := k.getCollection()
 	if len(buffer) == 0 {
 		return
 	}
 
-	i := 0
-	for i < len(buffer) {
+	for i := 0; i < len(buffer); i++ {
 		element := &buffer[i]
 		handler(element)
-		i++
 	}
 
 	k.push(buffer)
@@ -200,26 +196,21 @@ func (k *kelvin[T]) Map(handler func(t *T)) {
 
 // Where returns a collection containing only data for which the handler returns true.
 // Returns nil if handler is nil.
-//
-// Collection copies are not deep immutable copy.
-// So if you make changes any mutable field of T, you can change original collection.
-func (k *kelvin[T]) Where(handler func(t T) bool) []T {
+func (k *kelvin[T]) Where(handler func(t *T) bool) []T {
 	if handler == nil {
 		return nil
 	}
 
 	k.lock()
-	buffer := k.getCollection()
+	buffer := k.getImmutableCollection()
 	k.unlock()
 
 	result := make([]T, 0, len(buffer)/2)
-	i := 0
-	for i < len(buffer) {
-		element := buffer[i]
+	for i := 0; i < len(buffer); i++ {
+		element := &buffer[i]
 		if handler(element) {
-			result = append(result, element)
+			result = append(result, *element)
 		}
-		i++
 	}
 
 	return result

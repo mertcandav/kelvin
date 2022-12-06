@@ -82,9 +82,6 @@ Does not nothing if handler is nil.
 
 This method can be useful if you want to manipulate data based on a certain condition.
 
-> Collection copies are not deep immutable copy. \
-> So if you make changes any mutable field of T, you can change original collection.
-
 ```go
 db.Map(func(e *Employee) {
     switch e.Title {
@@ -115,11 +112,8 @@ db.Insert(
 The ``Where`` function is used to get collection with filter. \
 Returns nil if handler is nil.
 
-> Collection copies are not deep immutable copy. \
-> So if you make changes any mutable field of T, you can change original collection.
-
 ```go
-employees := db.Where(func(e Employee) bool { return e.Salary > 8000 })
+employees := db.Where(func(e *Employee) bool { return e.Salary > 8000 })
 ```
 
 The example above returns a collection that contains only employees with a salary higher than 8000.
