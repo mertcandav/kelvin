@@ -117,7 +117,7 @@ Returns nil if handler is nil.
 employees := db.Where(func(e Employee) bool { return e.Salary > 8000 })
 ```
 
-The example above returns a collection that contains only employees with a salary higher than 4000.
+The example above returns a collection that contains only employees with a salary higher than 8000.
 
 ## Static Typing
 
