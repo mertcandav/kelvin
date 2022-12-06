@@ -101,8 +101,8 @@ The ``Insert`` function is used to insert data.
 
 ```go
 db.Insert(
-    Car{Name: "James SMITH", Title: "Software Engineer", Salary: 12500},
-    Car{Name: "Linda JONES", Title: "Data Engineer", Salary: 10750})
+    Employee{Name: "James SMITH", Title: "Software Engineer", Salary: 12500},
+    Employee{Name: "Linda JONES", Title: "Data Engineer", Salary: 10750})
 ```
 
 ## Filter Data
@@ -119,6 +119,15 @@ employees := db.Where(func(e Employee) bool { return e.Salary > 8000 })
 
 The example above returns a collection that contains only employees with a salary higher than 4000.
 
+## Static Typing
+
+The original Kelvin database structure is not directly provided for safety reasons. \
+Use the ``Kelvin`` interface for static typing.
+
+```go
+var db kelvin.Kelvin[Employee]
+db = kelvin.Open[Employee](kelvin.NoWrite, kelvin.InMemory)
+```
 
 ## How Kelvin Handling Data Safety?
 

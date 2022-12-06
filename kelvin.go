@@ -22,6 +22,16 @@ const Ext = ".klvn"
 // Empty Kelvin content.
 const emptyContent = "[]"
 
+// Kelvin is an interface for static typing.
+type Kelvin[T any] interface {
+	Commit() error
+	IsNoWrite() bool
+	Insert(...T)
+	GetCollection() []T
+	Map(func(*T))
+	Where(func(T) bool) []T
+}
+
 // kelvin is kelvin database structure.
 type kelvin[T any] struct {
 	mode   byte
