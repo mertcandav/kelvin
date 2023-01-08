@@ -30,6 +30,7 @@ type Kelvin[T any] interface {
 	GetCollection() []T
 	Map(func(*T))
 	Where(func(*T) bool) []T
+	UWhere(func(*T) bool) []T
 }
 
 // kelvin is kelvin database structure.
