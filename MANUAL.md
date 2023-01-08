@@ -118,6 +118,18 @@ employees := db.Where(func(e *Employee) bool { return e.Salary > 8000 })
 
 The example above returns a collection that contains only employees with a salary higher than 8000.
 
+## Unsafe Functions
+
+Unsafe functions are unsafe.
+They are mostly the unsafe equivalents of safe functions for the sake of performance.
+Their main insecurities come from the fact that the buffer can be changed.
+They do not use an immutable copy, so changes made to a mutable data may affect the original data, which may break data consistency.
+
+Unsafe functions starts with `U` prefix.
+
+List of unsafe functions:
+- ``UWhere`` is unsafe equavalents of ``Where``
+
 ## Static Typing
 
 The original Kelvin database structure is not directly provided for safety reasons. \

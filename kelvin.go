@@ -194,17 +194,7 @@ func (k *kelvin[T]) Map(handler func(t *T)) {
 	k.push(buffer)
 }
 
-// Where returns a collection containing only data for which the handler returns true.
-// Returns nil if handler is nil.
-func (k *kelvin[T]) Where(handler func(t *T) bool) []T {
-	if handler == nil {
-		return nil
-	}
-
-	k.lock()
-	buffer := k.getImmutableCollection()
-	k.unlock()
-
+func (k *kelvin[T]) where(buffer []T, handler func(*T) bool) []T {
 	result := make([]T, 0, len(buffer)/2)
 	for i := 0; i < len(buffer); i++ {
 		element := &buffer[i]
@@ -214,4 +204,38 @@ func (k *kelvin[T]) Where(handler func(t *T) bool) []T {
 	}
 
 	return result
+}
+
+// Where returns a collection containing only data for which the handler returns true.
+// Returns nil if handler is nil.
+func (k *kelvin[T]) Where(handler func(*T) bool) []T {
+	if handler == nil {
+		return nil
+	}
+
+	k.lock()
+	buffer := k.getImmutableCollection()
+	k.unlock()
+
+	return k.where(buffer, handler)
+}
+
+// UWhere returns a collection containing only data for which the handler returns true.
+// Returns nil if handler is nil.
+//
+// This function is unsafe.
+// You can change original buffer of Kelvin instance becuase
+// this function doesn't use immutable copy of buffer.
+// Therefore this function theorically fast than Where function
+// but not safe as Where.
+func (k *kelvin[T]) UWhere(handler func(*T) bool) []T {
+	if handler == nil {
+		return nil
+	}
+
+	k.lock()
+	buffer := k.getCollection()
+	k.unlock()
+
+	return k.where(buffer, handler)
 }
