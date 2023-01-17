@@ -24,9 +24,11 @@ func readyToProcess(bytes []byte, cipher Cipher) []byte {
 
 func open[T any](path string, mode int, cipher Cipher) (k *kelvin[T]) {
 	var t T
-	kind := reflect.TypeOf(t).Kind()
-	if kind != reflect.Struct {
-		panic("type error: kelvin supports only structures")
+	tt := reflect.TypeOf(t)
+	if tt.Kind() != reflect.Struct {
+		if tt.Kind() != reflect.Pointer || tt.Elem().Kind() != reflect.Struct {
+			panic("type error: kelvin supports only structures")
+		}
 	}
 
 	if mode != InMemory && mode != Strict {

@@ -32,6 +32,10 @@ Datas are `Employee` structure.
 
 There are two modes, the example above uses in-memory mode.
 
+> **Warning** \
+> The data type must be structure. \
+> Structure or pointer to structure.
+
 ## Modes
 
 Kelvin has two modes: in-memory and strict. \
