@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"os"
+	"reflect"
 	"sync"
 )
 
@@ -27,6 +28,7 @@ type Kelvin[T any] interface {
 	Commit() error
 	IsNoWrite() bool
 	Insert(...T)
+	Drop(items ...T)
 	GetCollection() []T
 	Map(func(*T))
 	Where(func(*T) bool) []T
@@ -162,6 +164,27 @@ func (k *kelvin[T]) Insert(items ...T) {
 	buffer := k.getCollection()
 	buffer = append(buffer, items...)
 	k.push(buffer)
+}
+
+// Drop removes items from database content.
+func (k *kelvin[T]) Drop(items ...T) {
+	k.lock()
+	defer k.unlock()
+
+	buffer := k.getCollection()
+	changed := false
+	for _, item := range items {
+		for i, store := range buffer {
+			if reflect.DeepEqual(store, item) {
+				buffer[i] = buffer[len(buffer)-1]
+				buffer = buffer[:len(buffer)-1]
+				changed = true
+			}
+		}
+	}
+	if changed {
+		k.push(buffer)
+	}
 }
 
 // GetCollection returns all collection.

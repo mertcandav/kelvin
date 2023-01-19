@@ -111,6 +111,17 @@ db.Insert(
     Employee{Name: "Linda JONES", Title: "Data Engineer", Salary: 10750})
 ```
 
+## Drop Data
+
+The ``Drop`` function is used to drop data. \
+Drops data if all fields (both exported and unexported) deeply equals.
+
+```go
+db.Drop(
+    Employee{Name: "James SMITH", Title: "Software Engineer", Salary: 12500},
+    Employee{Name: "Linda JONES", Title: "Data Engineer", Salary: 10750})
+```
+
 ## Filter Data
 
 The ``Where`` function is used to get collection with filter. \
