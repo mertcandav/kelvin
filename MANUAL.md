@@ -73,7 +73,7 @@ db.Commit()
 ## Get Collection
 
 The ``GetCollection`` function is used to get all data of database. \
-Returns immutable copy of collection, but not deep copy.
+Returns deep immutable copy of collection.
 
 ```go
 coll := db.GetCollection()
@@ -120,6 +120,16 @@ Drops data if all fields (both exported and unexported) deeply equals.
 db.Drop(
     Employee{Name: "James SMITH", Title: "Software Engineer", Salary: 12500},
     Employee{Name: "Linda JONES", Title: "Data Engineer", Salary: 10750})
+```
+
+### Drop Data by Conditions
+
+The ```DropWhere` function is used to drop data with conditions. \
+Drops data if handler function returns true. \
+Does not nothing if handler is nil.
+
+```go
+db.DropWhere(func(e Employee) bool { return e.Salary > 7000 })
 ```
 
 ## Filter Data

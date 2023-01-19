@@ -29,6 +29,7 @@ type Kelvin[T any] interface {
 	IsNoWrite() bool
 	Insert(...T)
 	Drop(items ...T)
+	DropWhere(handler func(T) bool)
 	GetCollection() []T
 	Map(func(*T))
 	Where(func(*T) bool) []T
@@ -167,6 +168,7 @@ func (k *kelvin[T]) Insert(items ...T) {
 }
 
 // Drop removes items from database content.
+// Drops data if all fields (both exported and unexported) deeply equals.
 func (k *kelvin[T]) Drop(items ...T) {
 	k.lock()
 	defer k.unlock()
@@ -187,8 +189,35 @@ func (k *kelvin[T]) Drop(items ...T) {
 	}
 }
 
+// Drop removes items from database content.
+// Drops data if handler function returns true.
+// Does not nothing if handler is nil.
+func (k *kelvin[T]) DropWhere(handler func(T) bool) {
+	if handler == nil {
+		return
+	}
+
+	k.lock()
+	defer k.unlock()
+
+	buffer := k.getCollection()
+	changed := false
+	for i := 0; i < len(buffer); {
+		item := buffer[i]
+		if handler(item) {
+			buffer[i] = buffer[len(buffer)-1]
+			buffer = buffer[:len(buffer)-1]
+			changed = true
+			continue
+		}
+		i++
+	}
+	if changed {
+		k.push(buffer)
+	}
+}
+
 // GetCollection returns all collection.
-// Not returns deep copy of collection.
 func (k *kelvin[T]) GetCollection() []T {
 	k.lock()
 	defer k.unlock()
@@ -196,8 +225,8 @@ func (k *kelvin[T]) GetCollection() []T {
 }
 
 // Map iterates into all collection and commits changes.
-// Does not nothing if handler is empty.
-func (k *kelvin[T]) Map(handler func(t *T)) {
+// Does not nothing if handler is nil.
+func (k *kelvin[T]) Map(handler func(*T)) {
 	if handler == nil {
 		return
 	}
