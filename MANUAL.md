@@ -70,6 +70,17 @@ The ``Commit`` function is available for only in-memory mode.
 db.Commit()
 ```
 
+## Fill Data
+
+The ``Fill`` function removes all datas and inserts given datas. \
+Fills each item by deep immutable copy.
+
+```go
+db.Fill(
+	Employee{Name: "Jacob BELL", Title: "CEO", Salary: 40000},
+	Employee{Name: "Carmen TAYLOR", Title: "CTO", Salary: 32750})
+```
+
 ## Get Collection
 
 The ``GetCollection`` function is used to get all data of database. \

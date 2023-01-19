@@ -27,9 +27,10 @@ const emptyContent = "[]"
 type Kelvin[T any] interface {
 	Commit() error
 	IsNoWrite() bool
+	Fill(...T)
 	Insert(...T)
-	Drop(items ...T)
-	DropWhere(handler func(T) bool)
+	Drop(...T)
+	DropWhere(func(T) bool)
 	GetCollection() []T
 	Map(func(*T))
 	Where(func(*T) bool) []T
@@ -155,6 +156,30 @@ func (k *kelvin[T]) push(buffer []T) {
 	} else {
 		k.buffer = buffer
 	}
+}
+
+// Fill removes all datas and inserts given datas.
+// Fills each item by deep immutable copy.
+func (k *kelvin[T]) Fill(items ...T) {
+	k.lock()
+	defer k.unlock()
+
+	if len(items) == 0 {
+		k.push(nil)
+		return
+	}
+
+	if k.mode == Strict {
+		k.push(items)
+		return
+	}
+
+	buffer := make([]T, len(items))
+	for i, item := range items {
+		buffer[i] = deepCopy(item)
+	}
+
+	k.push(buffer)
 }
 
 // Insert inserts items to database content.
