@@ -31,6 +31,7 @@ type Kelvin[T any] interface {
 	Commit() error
 	IsNoWrite() bool
 	Fill(...T)
+	UFill(...T)
 	Insert(...T)
 	UInsert(...T)
 	Drop(...T)
@@ -186,7 +187,27 @@ func (k *kelvin[T]) Fill(items ...T) {
 	k.push(buffer)
 }
 
+// UFill removes all datas and inserts given datas.
+//
+// This function is unsafe.
+// You can change original buffer of Kelvin instance becuase
+// this function doesn't fills immutable copies of items.
+// Therefore this function theorically fast than Fill function
+// but not safe as Fill.
+func (k *kelvin[T]) UFill(items ...T) {
+	k.lock()
+	defer k.unlock()
+
+	if len(items) == 0 {
+		k.push(nil)
+		return
+	}
+
+	k.push(items)
+}
+
 // Insert inserts items to database content.
+// Inserts each item by deep immutable copy.
 func (k *kelvin[T]) Insert(items ...T) {
 	if len(items) == 0 {
 		return
