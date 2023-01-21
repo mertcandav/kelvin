@@ -204,8 +204,8 @@ func (k *kelvin[T]) Drop(items ...T) {
 	buffer := k.getCollection()
 	changed := false
 	for _, item := range items {
-		for i, store := range buffer {
-			if reflect.DeepEqual(store, item) {
+		for i, data := range buffer {
+			if reflect.DeepEqual(data, item) {
 				buffer[i] = buffer[len(buffer)-1]
 				buffer = buffer[:len(buffer)-1]
 				changed = true
