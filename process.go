@@ -22,7 +22,7 @@ func readyToProcess(bytes []byte, cipher Cipher) []byte {
 	return bytes
 }
 
-func open[T any](path string, mode int, cipher Cipher) (k *kelvin[T]) {
+func open[T any](path string, mode Mode, cipher Cipher) (k *kelvin[T]) {
 	var t T
 	tt := reflect.TypeOf(t)
 	if tt.Kind() != reflect.Struct {
@@ -80,7 +80,7 @@ func open[T any](path string, mode int, cipher Cipher) (k *kelvin[T]) {
 	}
 
 	k = new(kelvin[T])
-	k.mode = byte(mode)
+	k.mode = mode
 	k.cipher = cipher
 	k.locker = new(sync.Mutex)
 	return k
@@ -95,12 +95,12 @@ func open[T any](path string, mode int, cipher Cipher) (k *kelvin[T]) {
 //  - T is not structure
 //  - decoding is failed
 //  - buffering is failed
-func OpenSafe[T any](path string, mode int, cipher Cipher) Kelvin[T] {
+func OpenSafe[T any](path string, mode Mode, cipher Cipher) Kelvin[T] {
 	return open[T](path, mode, cipher)
 }
 
 // Open same as OpenSafe, but not uses cipher.
-func Open[T any](path string, mode int) Kelvin[T] {
+func Open[T any](path string, mode Mode) Kelvin[T] {
 	return open[T](path, mode, nil)
 }
 

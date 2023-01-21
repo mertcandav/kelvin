@@ -8,10 +8,13 @@ import (
 	"sync"
 )
 
+// Mode is types of the kelvin database modes.
+type Mode byte
+
 // Kelvin mode.
 const (
-	InMemory = 1
-	Strict   = 2
+	InMemory = Mode(1)
+	Strict   = Mode(2)
 )
 
 // kelvin no-write-to-disk mode.
@@ -39,7 +42,7 @@ type Kelvin[T any] interface {
 
 // kelvin is kelvin database structure.
 type kelvin[T any] struct {
-	mode   byte
+	mode   Mode
 	stream *os.File
 	buffer []T
 	cipher Cipher
