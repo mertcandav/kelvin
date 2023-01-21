@@ -32,6 +32,7 @@ type Kelvin[T any] interface {
 	IsNoWrite() bool
 	Fill(...T)
 	Insert(...T)
+	UInsert(...T)
 	Drop(...T)
 	DropWhere(func(T) bool)
 	GetCollection() []T
@@ -187,6 +188,35 @@ func (k *kelvin[T]) Fill(items ...T) {
 
 // Insert inserts items to database content.
 func (k *kelvin[T]) Insert(items ...T) {
+	if len(items) == 0 {
+		return
+	}
+
+	k.lock()
+	defer k.unlock()
+
+	buffer := k.getCollection()
+	buffer = append(buffer, items...)
+	n := len(buffer) - len(items)
+	for i := n; i < len(buffer); i++ {
+		item := &buffer[i]
+		*item = deepCopy(*item)
+	}
+	k.push(buffer)
+}
+
+// UInsert inserts items to database content.
+//
+// This function is unsafe.
+// You can change original buffer of Kelvin instance becuase
+// this function doesn't inserts immutable copies of items.
+// Therefore this function theorically fast than Insert function
+// but not safe as Insert.
+func (k *kelvin[T]) UInsert(items ...T) {
+	if len(items) == 0 {
+		return
+	}
+
 	k.lock()
 	defer k.unlock()
 

@@ -165,6 +165,7 @@ Unsafe functions starts with `U` prefix.
 
 List of unsafe functions:
 - ``UWhere`` is unsafe equavalents of ``Where``
+- ``UInsert`` is unsafe equavalents of ``Insert``
 
 ## Static Typing
 
